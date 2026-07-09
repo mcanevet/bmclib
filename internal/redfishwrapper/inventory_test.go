@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/bmc-toolbox/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -163,4 +164,64 @@ func TestInventoryNICsWithAOCFallback(t *testing.T) {
 			}
 		}
 	}
+}
+
+// TestInventoryCollectDriveWWNAndSmartStatus proves that collectDrives
+// populates WWN from the Drive's Identifiers and derives a SmartStatus from
+// FailurePredicted/PredictedMediaLifeLeftPercent, instead of always leaving
+// both fields empty.
+//
+// Fixture layout: two drives.
+//   - Disk.Bay.1: NAA + EUI identifiers, PredictedMediaLifeLeftPercent set,
+//     FailurePredicted absent (defaults to false) -> WWN should prefer the
+//     NAA identifier; SmartStatus should be "ok" since the BMC actively
+//     reports media-life telemetry with no predicted failure.
+//   - Disk.Bay.2: only an EUI identifier, FailurePredicted true, no
+//     PredictedMediaLifeLeftPercent -> WWN should fall back to EUI;
+//     SmartStatus should be "predicted failure" regardless of the missing
+//     media-life telemetry.
+func TestInventoryCollectDriveWWNAndSmartStatus(t *testing.T) {
+	mux := http.NewServeMux()
+	for path, fixture := range map[string]string{
+		"/redfish/v1/":          "serviceroot.json",
+		"/redfish/v1/Systems":   "systems.json",
+		"/redfish/v1/Systems/1": "systems_1.json",
+
+		"/redfish/v1/Systems/1/Storage":                                            "smc_drive_smart/storage.json",
+		"/redfish/v1/Systems/1/Storage/NVMeSSD":                                    "smc_drive_smart/storage_nvmessd.json",
+		"/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.1": "smc_drive_smart/drive_bay1.json",
+		"/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.2": "smc_drive_smart/drive_bay2.json",
+	} {
+		mux.HandleFunc(path, endpointFunc(t, fixture))
+	}
+
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	client := NewClient(u.Hostname(), u.Port(), "", "", WithBasicAuthEnabled(true))
+	require.NoError(t, client.Open(context.Background()))
+	defer client.Close(context.Background())
+
+	device, err := client.Inventory(context.Background(), false)
+	require.NoError(t, err)
+	require.NotNil(t, device)
+	require.Len(t, device.Drives, 2)
+
+	byID := make(map[string]*common.Drive)
+	for _, d := range device.Drives {
+		byID[d.ID] = d
+	}
+
+	bay1 := byID["Disk.Bay.1"]
+	require.NotNil(t, bay1, "Disk.Bay.1 missing from inventory")
+	assert.Equal(t, "naa.5000000000000b01", bay1.WWN, "WWN should prefer the NAA identifier over EUI")
+	assert.Equal(t, "ok", bay1.SmartStatus, "SmartStatus should be ok when media-life telemetry is reported with no predicted failure")
+
+	bay2 := byID["Disk.Bay.2"]
+	require.NotNil(t, bay2, "Disk.Bay.2 missing from inventory")
+	assert.Equal(t, "eui.0000000000000b02", bay2.WWN, "WWN should fall back to EUI when no NAA identifier is present")
+	assert.Equal(t, "predicted failure", bay2.SmartStatus, "SmartStatus should report a predicted failure regardless of missing media-life telemetry")
 }

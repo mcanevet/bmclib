@@ -1,0 +1,15 @@
+{
+    "@odata.type": "#Storage.v1_13_0.Storage",
+    "@odata.id": "/redfish/v1/Systems/1/Storage/NVMeSSD",
+    "Id": "NVMeSSD",
+    "Name": "NVMe SSD Storage",
+    "Drives@odata.count": 2,
+    "Drives": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.2"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "@odata.type": "#Drive.v1_15_0.Drive",
+    "@odata.id": "/redfish/v1/Chassis/NVMeSSD.0.Group.0.StorageBackplane/Drives/Disk.Bay.1",
+    "Id": "Disk.Bay.1",
+    "Name": "NVMe SSD Bay 1",
+    "Manufacturer": "KIOXIA",
+    "Model": "KCD8XVUG6T40",
+    "SerialNumber": "TESTDRIVESERIAL01",
+    "Revision": "0105",
+    "MediaType": "SSD",
+    "Protocol": "NVMe",
+    "CapacityBytes": 6401252745216,
+    "PredictedMediaLifeLeftPercent": 87,
+    "Status": {"State": "Enabled", "Health": "OK"},
+    "Identifiers": [
+        {
+            "DurableName": "naa.5000000000000b01",
+            "DurableNameFormat": "NAA"
+        },
+        {
+            "DurableName": "eui.0000000000000b01",
+            "DurableNameFormat": "EUI"
+        }
+    ]
+}

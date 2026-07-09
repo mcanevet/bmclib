@@ -398,6 +398,8 @@ func (c *Client) collectDrives(sys *schemas.ComputerSystem, device *common.Devic
 				Type:                string(drive.MediaType),
 				StorageController:   member.ID,
 				Protocol:            string(drive.Protocol),
+				WWN:                 wwnFromIdentifiers(drive.Identifiers),
+				SmartStatus:         smartStatusFromDrive(drive),
 				CapacityBytes:       int64(gofish.Deref(drive.CapacityBytes)),
 				CapableSpeedGbps:    int64(gofish.Deref(drive.CapableSpeedGbs)),
 				NegotiatedSpeedGbps: int64(gofish.Deref(drive.NegotiatedSpeedGbs)),
@@ -414,6 +416,50 @@ func (c *Client) collectDrives(sys *schemas.ComputerSystem, device *common.Devic
 	}
 
 	return nil
+}
+
+// wwnFromIdentifiers returns a drive's durable World Wide Name from its
+// Redfish Identifiers array. A drive may report several identifier formats
+// at once (e.g. an NVMe drive with both an EUI-64 and an NGUID); prefer true
+// WWN formats (NAA, FC_WWN) over NVMe-style unique identifiers (EUI, NGUID)
+// since those are what "WWN" conventionally refers to.
+func wwnFromIdentifiers(identifiers []schemas.Identifier) string {
+	preference := []schemas.DurableNameFormat{
+		schemas.NAADurableNameFormat,
+		schemas.FCWWNDurableNameFormat,
+		schemas.EUIDurableNameFormat,
+		schemas.NGUIDDurableNameFormat,
+	}
+
+	for _, format := range preference {
+		for _, id := range identifiers {
+			if id.DurableNameFormat == format && id.DurableName != "" {
+				return id.DurableName
+			}
+		}
+	}
+
+	return ""
+}
+
+// smartStatusFromDrive derives a coarse SMART-equivalent health status from
+// Redfish's FailurePredicted and PredictedMediaLifeLeftPercent properties.
+//
+// FailurePredicted is a plain bool, so there's no way to distinguish "the
+// BMC checked and found no predicted failure" from "the BMC doesn't report
+// this at all" — both unmarshal to false. PredictedMediaLifeLeftPercent is a
+// pointer, so its presence is a reliable signal that the BMC actually
+// monitors this drive's media life; only then is "ok" reported. A true
+// FailurePredicted is unambiguous regardless, and always reported.
+func smartStatusFromDrive(drive *schemas.Drive) string {
+	if drive.FailurePredicted {
+		return "predicted failure"
+	}
+	if drive.PredictedMediaLifeLeftPercent != nil {
+		return "ok"
+	}
+
+	return ""
 }
 
 // collectStorageControllers populates the device with Storage controller component attributes

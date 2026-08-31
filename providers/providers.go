@@ -88,4 +88,10 @@ const (
 
 	// FeatureResetSecureBootKeys means an implementation that can reset the UEFI Secure Boot key databases
 	FeatureResetSecureBootKeys registrar.Feature = "resetsecurebootkeys"
+
+	// FeatureResetSecureBootDatabaseKeys means an implementation that can reset a single UEFI Secure Boot key database
+	FeatureResetSecureBootDatabaseKeys registrar.Feature = "resetsecurebootdatabasekeys"
+
+	// FeatureImportSecureBootCertificate means an implementation that can enroll a certificate into a single UEFI Secure Boot key database
+	FeatureImportSecureBootCertificate registrar.Feature = "importsecurebootcertificate"
 )

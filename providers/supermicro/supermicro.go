@@ -63,6 +63,8 @@ var Features = registrar.Features{
 	providers.FeatureGetSecureBoot,
 	providers.FeatureSetSecureBoot,
 	providers.FeatureResetSecureBootKeys,
+	providers.FeatureResetSecureBootDatabaseKeys,
+	providers.FeatureImportSecureBootCertificate,
 }
 
 // supports
@@ -707,12 +709,30 @@ func (c *Client) SetSecureBoot(ctx context.Context, enable bool) (err error) {
 }
 
 // ResetSecureBootKeys resets the UEFI Secure Boot key databases
-func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType bmc.ResetSecureBootKeysType) (err error) {
 	if c.serviceClient == nil || c.serviceClient.redfish == nil {
 		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
 	}
 
 	return c.serviceClient.redfish.ResetSecureBootKeys(ctx, resetType)
+}
+
+// ResetSecureBootDatabaseKeys resets a single UEFI Secure Boot key database
+func (c *Client) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.SecureBootDatabase, resetType bmc.ResetSecureBootDatabaseKeysType) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.ResetSecureBootDatabaseKeys(ctx, database, resetType)
+}
+
+// ImportSecureBootCertificate enrolls a certificate into a single UEFI Secure Boot key database
+func (c *Client) ImportSecureBootCertificate(ctx context.Context, database bmc.SecureBootDatabase, certificatePEM string) (err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.ImportSecureBootCertificate(ctx, database, certificatePEM)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

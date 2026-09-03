@@ -43,6 +43,8 @@ var Features = registrar.Features{
 	providers.FeatureGetSecureBoot,
 	providers.FeatureSetSecureBoot,
 	providers.FeatureResetSecureBootKeys,
+	providers.FeatureResetSecureBootDatabaseKeys,
+	providers.FeatureImportSecureBootCertificate,
 }
 
 // compile-time assertions that the provider implements the BIOS configuration interfaces.
@@ -267,8 +269,18 @@ func (c *Conn) SetSecureBoot(ctx context.Context, enable bool) (err error) {
 }
 
 // ResetSecureBootKeys resets the UEFI Secure Boot key databases
-func (c *Conn) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+func (c *Conn) ResetSecureBootKeys(ctx context.Context, resetType bmc.ResetSecureBootKeysType) (err error) {
 	return c.redfishwrapper.ResetSecureBootKeys(ctx, resetType)
+}
+
+// ResetSecureBootDatabaseKeys resets a single UEFI Secure Boot key database
+func (c *Conn) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.SecureBootDatabase, resetType bmc.ResetSecureBootDatabaseKeysType) (err error) {
+	return c.redfishwrapper.ResetSecureBootDatabaseKeys(ctx, database, resetType)
+}
+
+// ImportSecureBootCertificate enrolls a certificate into a single UEFI Secure Boot key database
+func (c *Conn) ImportSecureBootCertificate(ctx context.Context, database bmc.SecureBootDatabase, certificatePEM string) (err error) {
+	return c.redfishwrapper.ImportSecureBootCertificate(ctx, database, certificatePEM)
 }
 
 // SendNMI tells the BMC to issue an NMI to the device

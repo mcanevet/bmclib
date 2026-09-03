@@ -37,11 +37,35 @@ type mockSecureBootKeysResetter struct {
 	err error
 }
 
-func (m *mockSecureBootKeysResetter) ResetSecureBootKeys(ctx context.Context, _ string) error {
+func (m *mockSecureBootKeysResetter) ResetSecureBootKeys(ctx context.Context, _ ResetSecureBootKeysType) error {
 	return m.err
 }
 
 func (m *mockSecureBootKeysResetter) Name() string {
+	return "mock"
+}
+
+type mockSecureBootDatabaseKeysResetter struct {
+	err error
+}
+
+func (m *mockSecureBootDatabaseKeysResetter) ResetSecureBootDatabaseKeys(ctx context.Context, _ SecureBootDatabase, _ ResetSecureBootDatabaseKeysType) error {
+	return m.err
+}
+
+func (m *mockSecureBootDatabaseKeysResetter) Name() string {
+	return "mock"
+}
+
+type mockSecureBootCertificateImporter struct {
+	err error
+}
+
+func (m *mockSecureBootCertificateImporter) ImportSecureBootCertificate(ctx context.Context, _ SecureBootDatabase, _ string) error {
+	return m.err
+}
+
+func (m *mockSecureBootCertificateImporter) Name() string {
 	return "mock"
 }
 
@@ -158,7 +182,87 @@ func TestResetSecureBootKeysFromInterfaces(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ResetSecureBootKeysFromInterfaces(context.Background(), tt.generic, "ResetAllKeysToDefault")
+			_, err := ResetSecureBootKeysFromInterfaces(context.Background(), tt.generic, ResetSecureBootKeysTypeResetAllKeysToDefault)
+
+			if tt.errMsg == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestResetSecureBootDatabaseKeysFromInterfaces(t *testing.T) {
+	testCases := []struct {
+		name    string
+		generic []interface{}
+		errMsg  string
+	}{
+		{
+			name:    "success",
+			generic: []interface{}{&mockSecureBootDatabaseKeysResetter{}},
+		},
+		{
+			name:    "not an implementation",
+			generic: []interface{}{&mockSecureBootStateGetter{}},
+			errMsg:  "no SecureBootDatabaseKeysResetter implementations found",
+		},
+		{
+			name:    "no implementations",
+			generic: []interface{}{},
+			errMsg:  "no SecureBootDatabaseKeysResetter implementations found",
+		},
+		{
+			name:    "error from resetter",
+			generic: []interface{}{&mockSecureBootDatabaseKeysResetter{err: errors.New("foobar")}},
+			errMsg:  "foobar",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ResetSecureBootDatabaseKeysFromInterfaces(context.Background(), tt.generic, SecureBootDatabaseDB, ResetSecureBootDatabaseKeysTypeResetAllKeysToDefault)
+
+			if tt.errMsg == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestImportSecureBootCertificateFromInterfaces(t *testing.T) {
+	testCases := []struct {
+		name    string
+		generic []interface{}
+		errMsg  string
+	}{
+		{
+			name:    "success",
+			generic: []interface{}{&mockSecureBootCertificateImporter{}},
+		},
+		{
+			name:    "not an implementation",
+			generic: []interface{}{&mockSecureBootStateGetter{}},
+			errMsg:  "no SecureBootCertificateImporter implementations found",
+		},
+		{
+			name:    "no implementations",
+			generic: []interface{}{},
+			errMsg:  "no SecureBootCertificateImporter implementations found",
+		},
+		{
+			name:    "error from importer",
+			generic: []interface{}{&mockSecureBootCertificateImporter{err: errors.New("foobar")}},
+			errMsg:  "foobar",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ImportSecureBootCertificateFromInterfaces(context.Background(), tt.generic, SecureBootDatabaseDB, "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----")
 
 			if tt.errMsg == "" {
 				assert.NoError(t, err)

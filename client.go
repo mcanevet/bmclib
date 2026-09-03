@@ -695,13 +695,38 @@ func (c *Client) SetSecureBoot(ctx context.Context, enable bool) (err error) {
 	return err
 }
 
-// ResetSecureBootKeys resets the UEFI Secure Boot key databases. resetType is one
-// of ResetAllKeysToDefault, DeleteAllKeys, or DeletePK.
-func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType string) (err error) {
+// ResetSecureBootKeys resets the UEFI Secure Boot key databases.
+func (c *Client) ResetSecureBootKeys(ctx context.Context, resetType bmc.ResetSecureBootKeysType) (err error) {
 	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetSecureBootKeys")
 	defer span.End()
 
 	metadata, err := bmc.ResetSecureBootKeysFromInterfaces(ctx, c.registry().GetDriverInterfaces(), resetType)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// ResetSecureBootDatabaseKeys resets a single UEFI Secure Boot key database,
+// leaving every other database - including PK - untouched.
+func (c *Client) ResetSecureBootDatabaseKeys(ctx context.Context, database bmc.SecureBootDatabase, resetType bmc.ResetSecureBootDatabaseKeysType) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ResetSecureBootDatabaseKeys")
+	defer span.End()
+
+	metadata, err := bmc.ResetSecureBootDatabaseKeysFromInterfaces(ctx, c.registry().GetDriverInterfaces(), database, resetType)
+	c.setMetadata(metadata)
+	metadata.RegisterSpanAttributes(c.Auth.Host, span)
+
+	return err
+}
+
+// ImportSecureBootCertificate enrolls a PEM-encoded certificate into a single
+// UEFI Secure Boot key database without disturbing any certificate already present.
+func (c *Client) ImportSecureBootCertificate(ctx context.Context, database bmc.SecureBootDatabase, certificatePEM string) (err error) {
+	ctx, span := c.traceprovider.Tracer(pkgName).Start(ctx, "ImportSecureBootCertificate")
+	defer span.End()
+
+	metadata, err := bmc.ImportSecureBootCertificateFromInterfaces(ctx, c.registry().GetDriverInterfaces(), database, certificatePEM)
 	c.setMetadata(metadata)
 	metadata.RegisterSpanAttributes(c.Auth.Host, span)
 

@@ -65,6 +65,7 @@ var Features = registrar.Features{
 	providers.FeatureResetSecureBootKeys,
 	providers.FeatureResetSecureBootDatabaseKeys,
 	providers.FeatureImportSecureBootCertificate,
+	providers.FeatureSetNetworkBootEnabled,
 }
 
 // supports
@@ -119,6 +120,7 @@ var (
 	_ bmc.BiosConfigurationGetter     = (*Client)(nil)
 	_ bmc.BiosConfigurationSetter     = (*Client)(nil)
 	_ bmc.BiosConfigurationFileSetter = (*Client)(nil)
+	_ bmc.NetworkBootEnabledSetter    = (*Client)(nil)
 )
 
 // Client is a Supermicro BMC connection.
@@ -688,6 +690,15 @@ func hostIP(hostURL string) (string, error) {
 	}
 
 	return hostURLParsed.Host, nil
+}
+
+// SetNetworkBootEnabled enables/disables UEFI HTTP Boot and/or legacy PXE boot capability
+func (c *Client) SetNetworkBootEnabled(ctx context.Context, httpEnabled, pxeEnabled *bool) (ok bool, err error) {
+	if c.serviceClient == nil || c.serviceClient.redfish == nil {
+		return false, errors.Wrap(bmclibErrs.ErrLoginFailed, "client not initialized")
+	}
+
+	return c.serviceClient.redfish.SetNetworkBootEnabled(ctx, httpEnabled, pxeEnabled)
 }
 
 // GetSecureBoot returns whether UEFI Secure Boot is currently enabled

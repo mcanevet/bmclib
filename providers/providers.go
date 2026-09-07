@@ -24,6 +24,8 @@ const (
 	FeatureBootDeviceSet registrar.Feature = "bootdeviceset"
 	// FeatureVirtualMedia means an implementation can manage virtual media devices
 	FeatureVirtualMedia registrar.Feature = "virtualmedia"
+	// FeatureSetNetworkBootEnabled means an implementation can enable/disable UEFI HTTP Boot and/or legacy PXE boot capability
+	FeatureSetNetworkBootEnabled registrar.Feature = "setnetworkbootenabled"
 	// FeatureMountFloppyImage means an implementation uploads a floppy image for mounting as virtual media.
 	//
 	// note: This is differs from FeatureVirtualMedia which is limited to accepting a URL to download the image from.

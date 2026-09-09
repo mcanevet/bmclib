@@ -54,6 +54,7 @@ var (
 		providers.FeatureResetSecureBootKeys,
 		providers.FeatureResetSecureBootDatabaseKeys,
 		providers.FeatureImportSecureBootCertificate,
+		providers.FeatureSetSecureBootKeyManagement,
 	}
 
 	errManufacturerUnknown = errors.New("error identifying device manufacturer")
@@ -106,10 +107,11 @@ func WithUseBasicAuth(useBasicAuth bool) Option {
 	}
 }
 
-// compile-time assertions that the provider implements the BIOS configuration interfaces.
+// compile-time assertions that the provider implements these interfaces.
 var (
-	_ bmc.BiosConfigurationGetter = (*Conn)(nil)
-	_ bmc.BiosConfigurationSetter = (*Conn)(nil)
+	_ bmc.BiosConfigurationGetter       = (*Conn)(nil)
+	_ bmc.BiosConfigurationSetter       = (*Conn)(nil)
+	_ bmc.SecureBootKeyManagementSetter = (*Conn)(nil)
 )
 
 // Conn details for redfish client

@@ -152,8 +152,17 @@ func (c *Client) Open(ctx context.Context) error {
 		config.DumpWriter = os.Stdout
 	}
 
+	// gofish stores a single context at construction and ignores the context passed to
+	// individual calls, so bounding the connect below by ctx requires setting the HTTP
+	// client's own Timeout. Restore it afterwards: ctx bounds this Open, while the client
+	// is reused for every subsequent call on this connection. Leaving the connect deadline
+	// in place caps all later calls at whatever share of it remained here - callers pass a
+	// connect deadline, not a per-request one, and it is routinely far shorter than the
+	// slowest legitimate operation (a Dell BIOS attribute write takes ~10s).
 	if tm := getTimeout(ctx); tm != 0 {
+		restore := config.HTTPClient.Timeout
 		config.HTTPClient.Timeout = tm
+		defer func() { config.HTTPClient.Timeout = restore }()
 	}
 	var err error
 	c.client, err = gofish.Connect(config)

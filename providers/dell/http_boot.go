@@ -10,8 +10,8 @@ import (
 // slots (HttpDev1..HttpDev4), each bound to a NIC FQDD via HttpDevNInterface - unlike
 // Supermicro/AMI Aptio's single global attribute. There is no field in bmc.NetworkBootConfig to
 // select a NIC, so this always targets slot 1, the primary boot device slot - confirmed live on
-// a PowerEdge R6715 (io18-kwdtpstorzur1-03, iDRAC firmware 1.5.3) where HttpDev1Interface is
-// already bound to the same NIC as PxeDev1Interface.
+// a PowerEdge R6715 (iDRAC firmware 1.5.3) where HttpDev1Interface is already bound to the same
+// NIC as PxeDev1Interface.
 const httpBootDeviceIndex = 1
 
 // SetHTTPBootURI sets the URI UEFI HTTP Boot fetches its boot image from.
@@ -20,14 +20,14 @@ const httpBootDeviceIndex = 1
 // ComputerSystem.Boot.HttpBootUri property, Dell's iDRAC does not populate that property at all
 // (confirmed live: absent from the Boot object entirely, not just empty, on iDRAC firmware
 // 1.5.3). Dell instead models the URI as a BIOS Setup attribute, HttpDevNUri, so this PATCHes
-// that attribute via SetBiosConfiguration instead. Independent of the HTTP Boot enable/disable
+// that attribute via setBiosConfiguration instead. Independent of the HTTP Boot enable/disable
 // toggle: setting the URI does not enable the capability, and enabling the capability does not
 // require a URI, matching bmc.NetworkBootConfig's contract.
 func (c *Conn) SetHTTPBootURI(ctx context.Context, uri string) (ok bool, err error) {
 	attrs := map[string]string{
 		fmt.Sprintf("HttpDev%dUri", httpBootDeviceIndex): uri,
 	}
-	if err := c.redfishwrapper.SetBiosConfiguration(ctx, attrs); err != nil {
+	if err := c.setBiosConfiguration(ctx, attrs); err != nil {
 		return false, err
 	}
 

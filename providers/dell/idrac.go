@@ -251,7 +251,7 @@ func (c *Conn) GetBiosConfiguration(ctx context.Context) (biosConfig map[string]
 
 // SetBiosConfiguration sets the BIOS configuration settings via the BMC
 func (c *Conn) SetBiosConfiguration(ctx context.Context, biosConfig map[string]string) (err error) {
-	return c.redfishwrapper.SetBiosConfiguration(ctx, biosConfig)
+	return c.setBiosConfiguration(ctx, biosConfig)
 }
 
 // ResetBiosConfiguration resets the BIOS configuration settings back to 'factory defaults' via the BMC

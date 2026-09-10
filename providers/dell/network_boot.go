@@ -12,8 +12,8 @@ import (
 // PxeDev1..PxeDev16), each bound to a NIC FQDD via HttpDevNInterface/PxeDevNInterface - unlike
 // Supermicro/AMI Aptio's single global attribute pair. There is no field in bmc.NetworkBootConfig
 // to select a NIC, so this always targets slot 1, the primary boot device slot - confirmed live
-// on a PowerEdge R6715 (io18-kwdtpstorzur1-03, iDRAC firmware 1.5.3) where both HttpDev1Interface
-// and PxeDev1Interface are already bound to the same NIC (NIC.Slot.5-1-1).
+// on a PowerEdge R6715 (iDRAC firmware 1.5.3) where both HttpDev1Interface and PxeDev1Interface
+// are already bound to the same NIC (NIC.Slot.5-1-1).
 const networkBootDeviceIndex = 1
 
 const (
@@ -38,7 +38,7 @@ func (c *Conn) SetNetworkBootEnabled(ctx context.Context, httpEnabled, pxeEnable
 		attrs[fmt.Sprintf("PxeDev%dEnDis", networkBootDeviceIndex)] = enDis(*pxeEnabled)
 	}
 
-	if err := c.redfishwrapper.SetBiosConfiguration(ctx, attrs); err != nil {
+	if err := c.setBiosConfiguration(ctx, attrs); err != nil {
 		return false, err
 	}
 

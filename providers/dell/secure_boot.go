@@ -19,11 +19,12 @@ const (
 // SetSecureBootKeyManagement sets the SecureBootPolicy BIOS attribute to
 // Custom or Standard.
 //
-// The current value is read first so a request matching it is a no-op:
-// scheduling a redundant BIOS configuration job is disruptive and can
-// conflict with an in-flight job. The write, when needed, is staged into the
-// Bios/Settings resource and only takes effect on the next POST, so a
-// successful change always reports rebootRequired true.
+// The current value is read first so a request matching it is a no-op: scheduling a redundant
+// BIOS configuration job is unnecessary, and setBiosConfiguration's recovery from a genuinely
+// conflicting in-flight job (see recoverFromPendingSettingsConflict) still costs an extra round
+// trip worth skipping when nothing needs to change. The write, when needed, is staged into the
+// Bios/Settings resource and only takes effect on the next POST, so a successful change always
+// reports rebootRequired true.
 //
 // Implements bmc.SecureBootKeyManagementSetter.
 func (c *Conn) SetSecureBootKeyManagement(ctx context.Context, enable bool) (rebootRequired bool, err error) {
@@ -48,7 +49,7 @@ func (c *Conn) SetSecureBootKeyManagement(ctx context.Context, enable bool) (reb
 		return false, nil
 	}
 
-	if err := c.redfishwrapper.SetBiosConfiguration(ctx, map[string]string{secureBootPolicyAttribute: want}); err != nil {
+	if err := c.setBiosConfiguration(ctx, map[string]string{secureBootPolicyAttribute: want}); err != nil {
 		return false, errors.Wrapf(err, "failed to set %s", secureBootPolicyAttribute)
 	}
 

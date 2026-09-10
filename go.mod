@@ -53,4 +53,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/stmcginnis/gofish => github.com/mcanevet/gofish v0.25.1-0.20260910101250-33edac1d7317
+replace github.com/stmcginnis/gofish => github.com/mcanevet/gofish v0.25.1-0.20260910131025-c6f56923c825

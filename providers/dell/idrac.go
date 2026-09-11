@@ -42,6 +42,7 @@ var (
 		providers.FeaturePowerSet,
 		providers.FeatureBootDeviceSet,
 		providers.FeatureSetHTTPBootURI,
+		providers.FeatureSetNetworkBootEnabled,
 		providers.FeatureFirmwareInstallSteps,
 		providers.FeatureFirmwareUploadInitiateInstall,
 		providers.FeatureFirmwareTaskStatus,
@@ -114,6 +115,7 @@ var (
 	_ bmc.BiosConfigurationSetter       = (*Conn)(nil)
 	_ bmc.HTTPBootURISetter             = (*Conn)(nil)
 	_ bmc.SecureBootKeyManagementSetter = (*Conn)(nil)
+	_ bmc.NetworkBootEnabledSetter      = (*Conn)(nil)
 )
 
 // Conn details for redfish client

@@ -18,7 +18,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stmcginnis/gofish v0.25.1-0.20260910061323-82603738c3d2
+	github.com/stmcginnis/gofish v0.25.1-0.20260915142237-1d62530a5d4e
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
@@ -53,7 +53,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// TODO: drop once stmcginnis/gofish#570 merges and a release containing
-// Bios.UpdateBiosAttributesExactApplyAt and Bios.UpdateBiosAttributesExact is tagged; then bump
-// the require above instead.
-replace github.com/stmcginnis/gofish => github.com/mcanevet/gofish v0.25.1-0.20260910131025-c6f56923c825
+// EXPERIMENT: pinned directly to stmcginnis/gofish#571's branch (fixes the diff-baseline bug at
+// its source in the stock diffing methods) instead of the mcanevet/gofish fork carrying #570's
+// exact-write bypass, to test whether #571 alone makes the exact-write mechanism unnecessary.

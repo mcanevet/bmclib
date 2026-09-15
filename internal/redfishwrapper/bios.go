@@ -94,16 +94,14 @@ func (c *Client) SetBiosConfiguration(ctx context.Context, biosConfig map[string
 		return err
 	}
 
+	// EXPERIMENT: using the plain (non-Exact) ApplyAt method to test whether
+	// stmcginnis/gofish#571's diff-baseline fix makes the Exact bypass unnecessary. The
+	// no-apply-time fallback below has no stock equivalent to fall back to without #570's
+	// exact-write additions, so it's disabled for this experiment - fine for today's Dell
+	// target, which always accepts @Redfish.SettingsApplyTime.
+	//
 	// TODO(jwb) We should handle passing different apply times here
-	err = bios.UpdateBiosAttributesExactApplyAt(settingsAttributes, schemas.OnResetSettingsApplyTime)
-	if err != nil && rejectsSettingsApplyTime(err) {
-		// This BMC's Bios resource doesn't declare @Redfish.Settings.SupportedApplyTimes
-		// at all and rejects the @Redfish.SettingsApplyTime property outright, rather than
-		// ignoring it. Retry without an apply-time hint - the settings still go through the
-		// resource's separate Settings URI (@Redfish.Settings.SettingsObject), which by
-		// Redfish convention means they're staged rather than applied immediately.
-		return bios.UpdateBiosAttributesExact(settingsAttributes)
-	}
+	err = bios.UpdateBiosAttributesApplyAt(settingsAttributes, schemas.OnResetSettingsApplyTime)
 	return err
 }
 
@@ -131,11 +129,11 @@ func (c *Client) ApplyBiosAttributesExact(ctx context.Context, attrs schemas.Set
 		return err
 	}
 
+	// EXPERIMENT: using the plain (non-Exact) ApplyAt method here too - see the comment in
+	// SetBiosConfiguration above.
+	//
 	// TODO(jwb) We should handle passing different apply times here
-	err = bios.UpdateBiosAttributesExactApplyAt(attrs, schemas.OnResetSettingsApplyTime)
-	if err != nil && rejectsSettingsApplyTime(err) {
-		return bios.UpdateBiosAttributesExact(attrs)
-	}
+	err = bios.UpdateBiosAttributesApplyAt(attrs, schemas.OnResetSettingsApplyTime)
 	return err
 }
 
